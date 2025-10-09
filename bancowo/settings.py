@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from os import getenv
 from dotenv import load_dotenv
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+AUTH_USER_MODEL = "users.User"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users"
 ]
 
 MIDDLEWARE = [
@@ -88,6 +91,13 @@ DATABASES = {
         "HOST": getenv("DATABASE_HOST"),
         "PORT": getenv("DATABASE_PORT", "5432"),
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'utils.renderers.StandardJSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # opcional
+    ),
 }
 
 
