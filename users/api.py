@@ -1,6 +1,6 @@
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
 from rest_framework import viewsets, permissions, status
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
@@ -49,13 +49,14 @@ class RegisterViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        token = Token.objects.create(user=user)
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
         user_data = UserSerializer(user).data
 
         return Response(
             {
                 "message": "Usuario registrado correctamente",
-                "data": {"user": user_data, "token": token.key},
+                "data": {"user": user_data, "token": access},
             },
             status=status.HTTP_201_CREATED,
         )
@@ -85,15 +86,15 @@ class LoginViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        Token.objects.filter(user=user).delete()
-        token = Token.objects.create(user=user)
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
         user_data = UserSerializer(user).data
 
         return Response(
             {
                 "success": True,
                 "message": "Inicio de sesión exitoso",
-                "data": {"user": user_data, "token": token.key},
+                "data": {"user": user_data, "token": access},
                 "errors": None,
             },
             status=status.HTTP_200_OK,
