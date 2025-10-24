@@ -1,8 +1,9 @@
 from .models import User
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
-from .serializers import UserSerializer
+from .serializers import UserSerializer, RegisterSerializer
 from rest_framework.response import Response
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.all_objects.all()
@@ -35,3 +36,9 @@ class UserViewSet(viewsets.ModelViewSet):
             {"success": True, "message": "Usuario restaurado correctamente", "data": serializer.data, "errors": None},
             status=status.HTTP_200_OK
         )
+    
+class RegisterViewSet(viewsets.ModelViewSet):
+    queryset = User.all_objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
+    

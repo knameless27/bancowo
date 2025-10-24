@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "users"
+    "users",
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -99,11 +100,14 @@ REST_FRAMEWORK = {
         'utils.renderers.StandardJSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',  # opcional
     ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+# https://docs.d-jangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
