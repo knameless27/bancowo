@@ -67,5 +67,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         return {
             'user': user,
             "token": token.key
+        }   
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True},  # no se muestra en GET
         }
- 
