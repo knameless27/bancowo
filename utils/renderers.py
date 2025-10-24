@@ -5,34 +5,18 @@ class StandardJSONRenderer(JSONRenderer):
     Renderer global para unificar la estructura de las respuestas DRF.
     """
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        response = renderer_context.get('response', None) # type: ignore
-        status_code = getattr(response, 'status_code', 200)
+        # If the view already structured the data, just return it.
+        if isinstance(data, dict) and "success" in data and "message" in data:
+            return super().render(data, accepted_media_type, renderer_context)
 
-        # Si viene de un error (por ejemplo 400, 404, 500)
+        response = getattr(renderer_context, "response", None)
+        status_code = response.status_code if response else 200
+
         success = 200 <= status_code < 300
-
-        # Estructura estándar
         formatted = {
-            'success': success,
-            'message': '',
-            'data': None,
-            'errors': None,
+            "success": success,
+            "message": data.get("message", "Éxito") if isinstance(data, dict) else "Éxito",
+            "data": data.get("data", data) if isinstance(data, dict) else data,
+            "errors": data.get("errors", None) if isinstance(data, dict) else None,
         }
-
-        # Si DRF mandó data normal
-        if isinstance(data, dict):
-            # Si DRF ya contiene claves conocidas, respetarlas
-            if 'results' in data or 'count' in data:
-                formatted['data'] = data  # para respuestas paginadas
-            elif 'detail' in data and not success:
-                formatted['message'] = data.get('detail')
-            else:
-                formatted['data'] = data
-        else:
-            formatted['data'] = data
-
-        # Si hay errores
-        if not success:
-            formatted['errors'] = data
-
         return super().render(formatted, accepted_media_type, renderer_context)
