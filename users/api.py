@@ -1,7 +1,7 @@
 from .models import User
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
 from rest_framework.response import Response
 
 
@@ -42,3 +42,35 @@ class RegisterViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
     
+class LoginViewSet(viewsets.ModelViewSet):
+    queryset = User.all_objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+        
+        try:
+            user = User.all_objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"success": False, "message": "Credenciales inválidas", "data": None, "errors": None},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        if not user.check_password(password):
+            return Response(
+                {"success": False, "message": "Credenciales inválidas", "data": None, "errors": None},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = Token.objects.create(user=user)
+        user_data = UserSerializer(user).data
+        
+        return Response(
+            {"success": True, "message": "Inicio de sesión exitoso", "data": {"user": user_data, "token": token.key}, "errors": None},
+            status=status.HTTP_200_OK
+        )
