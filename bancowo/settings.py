@@ -42,9 +42,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework.authtoken",
     "rest_framework",
     "users",
-    'rest_framework.authtoken'
+    "bank_resources",
 ]
 
 MIDDLEWARE = [
@@ -78,11 +79,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "bancowo.wsgi.application"
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # Database
@@ -104,13 +105,13 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'utils.renderers.StandardJSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # opcional
+    "DEFAULT_RENDERER_CLASSES": (
+        "utils.renderers.StandardJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # opcional
     ),
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
 }
 
 # Password validation
