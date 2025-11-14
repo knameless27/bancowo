@@ -14,3 +14,13 @@ class User(AbstractUser, SoftDeleteModel):
     deleted_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+class Beneficiary(SoftDeleteModel, models.Model):
+    user = models.ForeignKey(User, related_name="beneficiaries", on_delete=models.PROTECT)
+    name = models.CharField(max_length=15)
+    account_number = models.CharField(max_length=12)
+    bank_name = models.CharField(null=True, max_length=360, blank=True)
+    is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
