@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "users",
     "bank_resources",
+    "drf_spectacular",
 ]
 
 CELERY_BROKER_URL = "redis://localhost:6379/0"
@@ -125,6 +126,13 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Bank API",
+    "DESCRIPTION": "API del banco monolítico para transacciones, cuentas, préstamos, notificaciones, auditoría y más.",
+    "VERSION": "1.0.0",
 }
 
 # Password validation
