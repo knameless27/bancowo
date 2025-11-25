@@ -1,72 +1,51 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environment
+*.so
+*.egg-info/
+dist/
+build/
 venv/
-env/
-ENV/
-.venv/
 .env
+.env.*        # archivos de entorno locales
 
-# Django stuff
+# Django
 *.log
+*.sqlite3
+media/
+vol/
+staticfiles/
+static/       # si prefieres, ignora solo /vol/static y mantener nginx mounted static
 *.pot
 *.pyc
-*.pyo
-*.pyd
-*.sqlite3
-db.sqlite3
-/media
-/staticfiles
-/static
 
-# Local settings
-/local_settings.py
-/config/settings/local.py
+# Migrations (opcional: normalmente versionas migraciones, pero puedes ignorar si lo prefieres)
+#*/migrations/__pycache__/
+#*/migrations/*.pyc
+#*/migrations/*.py  # dejar comentado si versionas migraciones
 
-# VS Code
-.vscode/
-*.code-workspace
+# Settings: no subir archivos con secretos o overrides locales
+# Mantén base.py/dev.py/production.py, ignora overrides y archivos privados
+core/settings/local_settings.py
+core/settings/*.secret.py
+core/settings/.env
+core/settings/*.local
 
-# PyCharm
-.idea/
+# Nginx: no subir certificados ni claves privadas
+nginx/ssl/
+nginx/*.key
+nginx/*.pem
+nginx/*.crt
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-nosetests.xml
-test_*.log
+# Docker
+docker-compose.override.yml
+.docker/
+*.env.local
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# dotenv
-.env
-*.env
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# Pycharm project files
-*.iml
-
-# Cache
-__pycache__/
-*.egg-info/
-.eggs/
-
+# Editors
+.vscode/
+.idea/
