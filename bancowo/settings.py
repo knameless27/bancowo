@@ -50,6 +50,14 @@ INSTALLED_APPS = [
 
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@tubanco.com"
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "waos@waos.waos"
+EMAIL_HOST_PASSWORD = "waos123"
+EMAIL_USE_TLS = True
 
 
 MIDDLEWARE = [
@@ -60,6 +68,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.get_ip.IPAddressMiddleware"
 ]
 
 ROOT_URLCONF = "bancowo.urls"

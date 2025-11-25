@@ -86,14 +86,14 @@ class StatusLoanViewSet(viewsets.ModelViewSet):
     queryset = StatusLoan.all_objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = StatusLoanSerializer
-    
+
     def update(self, request, *args, **kwargs):
         loan = self.get_object()
 
         if loan.status_loan.name == "finished":
             return Response(
                 {"detail": "No se puede modificar un préstamo finalizado."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return super().update(request, *args, **kwargs)
@@ -103,7 +103,7 @@ class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.all_objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LoanSerializer
-    
+
     def perform_interest_calculation(self, loan):
         """
         Calcula los intereses acumulados hasta la fecha actual.
@@ -256,6 +256,17 @@ class AccountCardViewSet(viewsets.ModelViewSet):
                 description=f"Transfer of {amount} to card {destination_card.id}",
             )
 
+        notif = Notification.objects.create(
+            user=transaction.account_card.account.user,
+            title="Transacción realizada",
+            message=f"Se realizó una transacción por {db_transaction.amount}",
+            bank_name="Bancowo",
+            type_notification_id=1,
+            status_notification_id=1,
+        )
+
+        send_notification_email.delay(notif.id)
+
         return Response({"message": "Transfer successfully", "transaction_id": tx.id})
 
 
@@ -314,8 +325,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             writer.writerow(
                 [
                     tx.created_at,
-                    cast(AccountCard, tx.account_card).id, # type: ignore
-                    cast(AccountCard, tx.destination_account_card).id, # type: ignore
+                    cast(AccountCard, tx.account_card).id,  # type: ignore
+                    cast(AccountCard, tx.destination_account_card).id,  # type: ignore
                     tx.transaction_type.name,
                     tx.transaction_status.name,
                     tx.description or "",
@@ -336,7 +347,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         pdf.drawString(100, 820, "Historial de Transacciones")
 
         for tx in transactions:
-            line = f"{tx.created_at} | {cast(AccountCard, tx.account_card).id} -> {cast(AccountCard, tx.destination_account_card).id} | {tx.transaction_type.name} | {tx.transaction_status.name}" # type: ignore
+            line = f"{tx.created_at} | {cast(AccountCard, tx.account_card).id} -> {cast(AccountCard, tx.destination_account_card).id} | {tx.transaction_type.name} | {tx.transaction_status.name}"  # type: ignore
             pdf.drawString(50, y, line)
             y -= 20
             if y < 50:
@@ -351,6 +362,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = "attachment; filename=transactions.pdf"
         return response
 
+
 class AccountStatementViewSet(viewsets.ModelViewSet):
     queryset = AccountStatement.all_objects.all()
     serializer_class = AccountStatementSerializer
@@ -359,4 +371,5 @@ class AccountStatementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         statement = serializer.save(status=AccountStatus.objects.get(name="pending"))
         from .task import generate_statement_files
+
         generate_statement_files.delay(statement.id)
