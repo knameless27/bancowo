@@ -40,6 +40,7 @@ from django.db.models import Q
 from rest_framework.response import Response
 
 
+
 class TransactionTypeViewSet(viewsets.ModelViewSet):
     queryset = TransactionType.all_objects.all()
     permission_classes = [permissions.IsAuthenticated]

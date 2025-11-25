@@ -7,6 +7,7 @@ click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.3.0
 Django==5.2.8
+django-redis==6.0.0
 djangorestframework==3.16.1
 dotenv==0.9.9
 kombu==5.5.4
@@ -14,6 +15,7 @@ packaging==25.0
 prompt_toolkit==3.0.52
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
+redis==7.1.0
 six==1.17.0
 sqlparse==0.5.3
 tzdata==2025.2
