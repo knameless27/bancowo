@@ -1,10 +1,12 @@
 import csv
+from django.utils import timezone
 from io import BytesIO
 from django.http import HttpResponse
 from .models import (
     Account,
     AccountCard,
     AccountCardStatus,
+    AccountStatement,
     AccountStatus,
     AccountType,
     CardType,
@@ -17,6 +19,7 @@ from .models import (
 from .serializers import (
     AccountCardSerializer,
     AccountCardStatusSerializer,
+    AccountStatementSerializer,
     AccountTypeSerializer,
     AccountSerializer,
     AccountStatusSerializer,
@@ -83,12 +86,100 @@ class StatusLoanViewSet(viewsets.ModelViewSet):
     queryset = StatusLoan.all_objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = StatusLoanSerializer
+    
+    def update(self, request, *args, **kwargs):
+        loan = self.get_object()
+
+        if loan.status_loan.name == "finished":
+            return Response(
+                {"detail": "No se puede modificar un préstamo finalizado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return super().update(request, *args, **kwargs)
 
 
 class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.all_objects.all()
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LoanSerializer
+    
+    def perform_interest_calculation(self, loan):
+        """
+        Calcula los intereses acumulados hasta la fecha actual.
+        Fórmula simple: interés = monto * tasa * (días/365)
+        """
+        now = timezone.now()
+        start_date = loan.created_at
+        end_date = loan.end_date
+
+        if now > end_date:
+            end_calc = end_date
+        else:
+            end_calc = now
+
+        diff_days = (end_calc - start_date).days
+
+        interest = loan.amount * (loan.interest_rate / 100) * (diff_days / 365)
+
+        return round(interest, 2)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+
+        account = Account.objects.get(id=data.get("account"))
+        status_loan = StatusLoan.objects.get(id=data.get("status_loan"))
+
+        loan = Loan.objects.create(
+            amount=data.get("amount"),
+            interest_rate=data.get("interest_rate"),
+            end_date=data.get("end_date"),
+            account=account,
+            status_loan=status_loan,
+        )
+
+        interest = self.perform_interest_calculation(loan)
+        response_data = dict(LoanSerializer(loan).data)
+        response_data["calculated_interest"] = interest
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data.copy()
+
+        if "account" in data:
+            instance.account = Account.objects.get(id=data.get("account"))
+
+        if "status_loan" in data:
+            instance.status_loan = StatusLoan.objects.get(id=data.get("status_loan"))
+
+        if "amount" in data:
+            instance.amount = data.get("amount")
+
+        if "interest_rate" in data:
+            instance.interest_rate = data.get("interest_rate")
+
+        if "end_date" in data:
+            instance.end_date = data.get("end_date")
+
+        instance.save()
+        interest = self.perform_interest_calculation(instance)
+        response_data = dict(LoanSerializer(instance).data)
+        response_data["calculated_interest"] = interest
+
+        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"])
+    def interest(self, request, pk=None):
+        """
+        Endpoint adicional: /loans/{id}/interest/
+        Devuelve los intereses acumulados al día de la consulta.
+        """
+        loan = self.get_object()
+        interest = self.perform_interest_calculation(loan)
+        return Response({"loan_id": loan.id, "interest": interest})
 
 
 class AccountCardViewSet(viewsets.ModelViewSet):
@@ -223,8 +314,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             writer.writerow(
                 [
                     tx.created_at,
-                    cast(AccountCard, tx.account_card).id,
-                    cast(AccountCard, tx.destination_account_card).id,
+                    cast(AccountCard, tx.account_card).id, # type: ignore
+                    cast(AccountCard, tx.destination_account_card).id, # type: ignore
                     tx.transaction_type.name,
                     tx.transaction_status.name,
                     tx.description or "",
@@ -245,7 +336,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         pdf.drawString(100, 820, "Historial de Transacciones")
 
         for tx in transactions:
-            line = f"{tx.created_at} | {cast(AccountCard, tx.account_card).id} -> {cast(AccountCard, tx.destination_account_card).id} | {tx.transaction_type.name} | {tx.transaction_status.name}"
+            line = f"{tx.created_at} | {cast(AccountCard, tx.account_card).id} -> {cast(AccountCard, tx.destination_account_card).id} | {tx.transaction_type.name} | {tx.transaction_status.name}" # type: ignore
             pdf.drawString(50, y, line)
             y -= 20
             if y < 50:
@@ -259,3 +350,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
         response = HttpResponse(buffer, content_type="application/pdf")
         response["Content-Disposition"] = "attachment; filename=transactions.pdf"
         return response
+
+class AccountStatementViewSet(viewsets.ModelViewSet):
+    queryset = AccountStatement.all_objects.all()
+    serializer_class = AccountStatementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        statement = serializer.save(status=AccountStatus.objects.get(name="pending"))
+        from .task import generate_statement_files
+        generate_statement_files.delay(statement.id)

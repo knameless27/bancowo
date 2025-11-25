@@ -1,6 +1,8 @@
+from django.utils import timezone
 from .models import (
     AccountCard,
     AccountCardStatus,
+    AccountStatement,
     AccountType,
     AccountStatus,
     CardType,
@@ -152,10 +154,23 @@ class LoanSerializer(serializers.ModelSerializer):
         model = Loan
         fields = "__all__"
 
+    def validate(self, data):
+        end_date = data.get("end_date")
+        amount = data.get("amount")
+        interest = data.get("interest_rate")
+
+        if end_date <= timezone.now():
+            raise serializers.ValidationError("La fecha de fin debe ser mayor a la fecha actual.")
+
+        if amount <= 0:
+            raise serializers.ValidationError("El monto debe ser mayor que cero.")
+
+        if interest < 0:
+            raise serializers.ValidationError("La tasa de interés no puede ser negativa.")
+
+        return data
+
     def delete(self, instance):
-        """
-        Soft delete: marca deleted_at en lugar de eliminar físicamente.
-        """
         instance.delete()
         instance.save()
         return instance
@@ -210,6 +225,19 @@ class TransactionSerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = ("created_at", "id")
+
+    def delete(self, instance):
+        """
+        Soft delete: marca deleted_at en lugar de eliminar físicamente.
+        """
+        instance.delete()
+        instance.save()
+        return instance
+
+class AccountStatementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccountStatement
+        fields = "__all__"
 
     def delete(self, instance):
         """

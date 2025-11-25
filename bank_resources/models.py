@@ -126,3 +126,26 @@ class Transaction(SoftDeleteModel, models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class AccountStatement(SoftDeleteModel):
+    account = models.ForeignKey(
+        Account, related_name="statements", on_delete=models.PROTECT
+    )
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    opening_balance = models.FloatField(default=0)
+    closing_balance = models.FloatField(default=0)
+    total_debits = models.FloatField(default=0)
+    total_credits = models.FloatField(default=0)
+
+    status = models.ForeignKey(
+        AccountStatus, related_name="statements", on_delete=models.PROTECT
+    )
+
+    file_url = models.CharField(max_length=500, null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)

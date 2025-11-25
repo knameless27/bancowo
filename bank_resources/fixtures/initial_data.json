@@ -38,5 +38,37 @@
       "updated_at": "2025-11-14T17:03:08Z",
       "created_at": "2025-11-14T17:03:08Z"
     }
+  },
+  {
+    "model": "bank_resources.AccountStatus",
+    "pk": 1,
+    "fields": {
+      "name": "pending",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "bank_resources.AccountStatus",
+    "pk": 2,
+    "fields": {
+      "name": "generated",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "bank_resources.AccountStatus",
+    "pk": 3,
+    "fields": {
+      "name": "sent",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "bank_resources.AccountStatus",
+    "pk": 4,
+    "fields": {
+      "name": "downloaded",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
   }
 ]
